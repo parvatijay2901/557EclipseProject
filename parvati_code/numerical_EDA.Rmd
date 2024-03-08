@@ -1,0 +1,219 @@
+---
+title: "Eclipses of a Lifetime: (Parvati - Numerical EDA)"
+author: "Parvati Jayakumar"
+date: "03/08/2024
+output: html_document
+---
+
+## Import Libraries
+```{r}
+library(dplyr)
+library(readr)
+library(binom)
+```
+
+## Load the data
+```{r}
+lunar_df <- read.csv("dataset/lunar_data_full.csv")
+head(lunar_df,2)
+```
+```{r}
+solar_df <- read.csv("dataset/solar_data_full.csv")
+head(solar_df,2)
+```
+```{r}
+sample_lunar_df <- read.csv("dataset/lunar_data_sample.csv")
+head(sample_lunar_df,2)
+```
+```{r}
+sample_solar_df <- read.csv("dataset/solar_data_sample.csv")
+head(sample_solar_df,2)
+```
+## Numerical Analysis
+```{r}
+# Null Hypothesis (H0): Lunar eclipses are equally likely to occur in all months.
+# Alternative Hypothesis (H1): Lunar eclipses are more likely to occur in specific months.
+lunar_month_counts <- table(sample_lunar_df$Calendar.Month)
+expected_frequency <- sum(lunar_month_counts)/length(lunar_month_counts)
+lunar_month_chisq <- chisq.test(lunar_month_counts)
+print(lunar_month_chisq)
+```
+```{r}
+# Null Hypothesis (H0): Penumbral lunar eclipses are equally likely to occur in all months.
+# Alternative Hypothesis (H1): Penumbral lunar eclipses are more likely to occur in specific months.
+lunar_penumbral_df <- filter(sample_lunar_df, Eclipse.Type == "N")
+lunar_penumbral_month_counts <- table(lunar_penumbral_df$Calendar.Month)
+expected_frequency <- sum(lunar_penumbral_month_counts)/length(lunar_penumbral_month_counts)
+lunar_penumbral_month_chisq <- chisq.test(lunar_penumbral_month_counts)
+print(lunar_penumbral_month_chisq)
+```
+```{r}
+# Null Hypothesis (H0): Partial lunar eclipses are equally likely to occur in all months.
+# Alternative Hypothesis (H1): Partial lunar eclipses are more likely to occur in specific months.
+lunar_partial_df <- filter(sample_lunar_df, Eclipse.Type == "P")
+lunar_partial_month_counts <- table(lunar_partial_df$Calendar.Month)
+expected_frequency <- sum(lunar_partial_month_counts)/length(lunar_partial_month_counts)
+lunar_partial_month_chisq <- chisq.test(lunar_partial_month_counts)
+print(lunar_partial_month_chisq)
+```
+```{r}
+# Null Hypothesis (H0): Total lunar eclipses are equally likely to occur in all months.
+# Alternative Hypothesis (H1): Total lunar eclipses are more likely to occur in specific months.
+lunar_total_df <- filter(sample_lunar_df, Eclipse.Type == "T")
+lunar_total_month_counts <- table(lunar_total_df$Calendar.Month)
+expected_frequency <- sum(lunar_total_month_counts)/length(lunar_total_month_counts)
+lunar_total_month_chisq <- chisq.test(lunar_total_month_counts)
+print(lunar_total_month_chisq)
+```
+```{r}
+# Null Hypothesis (H0): Solar eclipses are equally likely to occur in all months.
+# Alternative Hypothesis (H1): Solar eclipses are more likely to occur in specific months.
+solar_month_counts <- table(sample_solar_df$Calendar.Month)
+expected_frequency <- sum(solar_month_counts)/length(solar_month_counts)
+solar_month_chisq <- chisq.test(solar_month_counts)
+print(solar_month_chisq)
+```
+```{r}
+# Null Hypothesis (H0): Annular solar eclipses are equally likely to occur in all months.
+# Alternative Hypothesis (H1): Annular solar eclipses are more likely to occur in specific months.
+solar_annular_df <- filter(sample_solar_df, Eclipse.Type == "A")
+solar_annular_month_counts <- table(solar_annular_df$Calendar.Month)
+expected_frequency <- sum(solar_annular_month_counts)/length(solar_annular_month_counts)
+solar_annular_month_chisq <- chisq.test(solar_annular_month_counts)
+print(solar_annular_month_chisq)
+```
+```{r}
+# Null Hypothesis (H0): Hybrid solar eclipses are equally likely to occur in all months.
+# Alternative Hypothesis (H1): Hybrid solar eclipses are more likely to occur in specific months.
+solar_hybrid_df <- filter(sample_solar_df, Eclipse.Type == "H")
+solar_hybrid_month_counts <- table(solar_hybrid_df$Calendar.Month)
+expected_frequency <- sum(solar_hybrid_month_counts)/length(solar_hybrid_month_counts)
+solar_hybrid_month_chisq <- chisq.test(solar_hybrid_month_counts)
+print(solar_hybrid_month_chisq)
+```
+```{r}
+# Null Hypothesis (H0): Partial solar eclipses are equally likely to occur in all months.
+# Alternative Hypothesis (H1): Partial solar eclipses are more likely to occur in specific months.
+solar_partial_df <- filter(sample_solar_df, Eclipse.Type == "P")
+solar_partial_month_counts <- table(solar_partial_df$Calendar.Month)
+expected_frequency <- sum(solar_partial_month_counts)/length(solar_partial_month_counts)
+solar_partial_month_chisq <- chisq.test(solar_partial_month_counts)
+print(solar_partial_month_chisq)
+```
+```{r}
+# Null Hypothesis (H0): Total solar eclipses are equally likely to occur in all months.
+# Alternative Hypothesis (H1): Total solar eclipses are more likely to occur in specific months.
+solar_total_df <- filter(sample_solar_df, Eclipse.Type == "T")
+solar_total_month_counts <- table(solar_total_df$Calendar.Month)
+expected_frequency <- sum(solar_total_month_counts)/length(solar_total_month_counts)
+solar_total_month_chisq <- chisq.test(solar_total_month_counts)
+print(solar_total_month_chisq)
+```
+```{r}
+# Ho: There is no significant association between lunar eclipse types and calendar months.
+# Ha: There is a significant association between lunar eclipse types and calendar months.
+
+contingency_table <- table(sample_lunar_df$Eclipse.Type, sample_lunar_df$Calendar.Month)
+chi_square_test <- chisq.test(contingency_table)
+print(chi_square_test)
+
+chi_squared <- chi_square_test$statistic
+num_rows <- nrow(contingency_table)
+num_cols <- ncol(contingency_table)
+n <- sum(contingency_table)
+cramers_v <- sqrt(chi_squared / (n * (min(num_rows, num_cols) - 1)))
+cat("Cramer's V: ", cramers_v, "\n")
+
+cat("-----------------------------------------------------------------------------------------------------\n\n")
+
+confidence_level <- 0.95
+Z <- qnorm((1 + confidence_level) / 2)
+
+unique_months <- unique(sample_lunar_df$Calendar.Month)
+unique_eclipse_types <- unique(sample_lunar_df$Eclipse.Type)
+results <- list()
+
+for (month in unique_months)
+{
+  if (!is.na(month))
+  {
+    for (eclipse_type in unique_eclipse_types)
+    {
+      lunar_df_eclipse_type <- filter(sample_lunar_df, Eclipse.Type == eclipse_type)
+      lunar_df_eclipse_type <- na.omit(lunar_df_eclipse_type)
+      total_lunar_df_eclipse_type <- nrow(lunar_df_eclipse_type)
+
+      lunar_df_eclipse_type_month <- filter(lunar_df_eclipse_type, Calendar.Month == month)
+      total_lunar_df_eclipse_type_month <- nrow(lunar_df_eclipse_type_month)
+
+      proportion_eclipse_type_month <- total_lunar_df_eclipse_type_month / total_lunar_df_eclipse_type
+      SE <- sqrt(proportion_eclipse_type_month * (1 - proportion_eclipse_type_month) / total_lunar_df_eclipse_type)
+      ME <- Z * SE
+
+      lower_bound <- proportion_eclipse_type_month - ME
+      upper_bound <- proportion_eclipse_type_month + ME
+
+      results[[eclipse_type]] <- list(Frequency =  total_lunar_df_eclipse_type_month, Proportion = proportion_eclipse_type_month, Margin_of_Error = ME, Confidence_Interval = c(lower_bound, upper_bound))
+      cat("Proportion of", eclipse_type, "eclipses occurring in month ", month, ": ", results[[eclipse_type]]$Proportion, "\n")
+      cat("Margin of Error:", results[[eclipse_type]]$Margin_of_Error, "\n")
+      cat("95% Confidence Interval: (", results[[eclipse_type]]$Confidence_Interval[1], ", ", results[[eclipse_type]]$Confidence_Interval[2], ")\n\n")
+    }
+    cat("-------------------------------------------------------------------------------------------------\n\n")
+  }
+}
+```
+```{r}
+# Ho: There is no significant association between solar eclipse types and calendar months.
+# Ha: There is a significant association between solar eclipse types and calendar months.
+
+contingency_table <- table(sample_solar_df$Eclipse.Type, sample_solar_df$Calendar.Month)
+chi_square_test <- chisq.test(contingency_table)
+print(chi_square_test)
+
+chi_squared <- chi_square_test$statistic
+num_rows <- nrow(contingency_table)
+num_cols <- ncol(contingency_table)
+n <- sum(contingency_table)
+cramers_v <- sqrt(chi_squared / (n * (min(num_rows, num_cols) - 1)))
+cat("Cramer's value: ", cramers_v, "\n")
+
+cat("-----------------------------------------------------------------------------------------------------\n\n")
+
+overall_alpha <- 0.05
+num_comparisons <- length(unique(sample_solar_df$Eclipse.Type))
+alpha_corrected <- overall_alpha / num_comparisons
+Z <- qnorm(1 - alpha_corrected / 2)
+
+unique_months <- unique(sample_solar_df$Calendar.Month)
+unique_eclipse_types <- unique(sample_solar_df$Eclipse.Type)
+results <- list()
+
+for (month in unique_months)
+{
+  if (!is.na(month))
+  {
+    for (eclipse_type in unique_eclipse_types)
+    {
+      solar_df_eclipse_type <- filter(sample_solar_df, Eclipse.Type == eclipse_type)
+      solar_df_eclipse_type <- na.omit(solar_df_eclipse_type)
+      total_solar_df_eclipse_type <- nrow(solar_df_eclipse_type)
+
+      solar_df_eclipse_type_month <- filter(solar_df_eclipse_type, Calendar.Month == month)
+      total_solar_df_eclipse_type_month <- nrow(solar_df_eclipse_type_month)
+
+      proportion_eclipse_type_month <- total_solar_df_eclipse_type_month / total_solar_df_eclipse_type
+      SE <- sqrt(proportion_eclipse_type_month * (1 - proportion_eclipse_type_month) / total_solar_df_eclipse_type)
+      ME <- Z * SE
+
+      lower_bound <- proportion_eclipse_type_month - ME
+      upper_bound <- proportion_eclipse_type_month + ME
+
+      results[[eclipse_type]] <- list(Frequency =  total_solar_df_eclipse_type_month, Proportion = proportion_eclipse_type_month, Margin_of_Error = ME, Confidence_Interval = c(lower_bound, upper_bound))
+      cat("Proportion of", eclipse_type, "eclipses occurring in month ", month, ": ", results[[eclipse_type]]$Proportion, "\n")
+      cat("Margin of Error:", results[[eclipse_type]]$Margin_of_Error, "\n")
+      cat("95% Confidence Interval: (", results[[eclipse_type]]$Confidence_Interval[1], ", ", results[[eclipse_type]]$Confidence_Interval[2], ")\n\n")
+    }
+    cat("-------------------------------------------------------------------------------------------------\n\n")
+  }
+}
+```

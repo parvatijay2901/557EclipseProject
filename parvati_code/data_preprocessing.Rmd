@@ -1,0 +1,83 @@
+---
+title: "Eclipses of a Lifetime: (Parvati - Data pre-processing)"
+author: "Parvati Jayakumar"
+date: "03/08/2024
+output: html_document
+---
+
+## Import Libraries
+```{r}
+library(dplyr)
+library(readr)
+library(binom)
+```
+
+## Data pre-processing
+
+```{r}
+temp_lunar_df <- read.csv("dataset/lunar.csv")
+head(temp_lunar_df,2)
+```
+```{r}
+temp_solar_df <- read.csv("dataset/solar.csv")
+head(temp_solar_df,2)
+```
+```{r}
+# Make the BCE dates in %Y %B %d format and have a column that says if the date is BCE and CE (lunar_df)
+temp_lunar_df_BCE <- temp_lunar_df
+temp_lunar_df_BCE$Calendar.Date <- as.Date(temp_lunar_df_BCE$Calendar.Date, format = "-%Y %B %d")
+temp_lunar_df_BCE$Calendar.Era <- "BCE"
+
+temp_lunar_df_CE <- temp_lunar_df
+temp_lunar_df_CE$Calendar.Date <- as.Date(temp_lunar_df_CE$Calendar.Date, format = "%Y %B %d")
+temp_lunar_df_CE$Calendar.Era <- "CE"
+
+lunar_df <- rbind(temp_lunar_df_BCE, temp_lunar_df_CE)
+head(lunar_df, 2)
+```
+```{r}
+# Make the BCE dates in %Y %B %d format and have a column that says if the date is BCE and CE (solar_df)
+temp_solar_df_BCE <- temp_solar_df
+temp_solar_df_BCE$Calendar.Date <- as.Date(temp_solar_df_BCE$Calendar.Date, format = "-%Y %B %d")
+temp_solar_df_BCE$Calendar.Era <- "BCE"
+
+temp_solar_df_CE <- temp_solar_df
+temp_solar_df_CE$Calendar.Date <- as.Date(temp_solar_df_CE$Calendar.Date, format = "%Y %B %d")
+temp_solar_df_CE$Calendar.Era <- "CE"
+
+solar_df <- rbind(temp_solar_df_BCE, temp_solar_df_CE)
+head(solar_df, 2)
+```
+
+```{r}
+# Extract Day, Month and Year
+lunar_df$Calendar.Month <- format(lunar_df$Calendar.Date, "%m")
+solar_df$Calendar.Month <- format(solar_df$Calendar.Date, "%m")
+
+lunar_df$Calendar.Day <- format(lunar_df$Calendar.Date, "%d")
+solar_df$Calendar.Day <- format(solar_df$Calendar.Date, "%d")
+
+lunar_df$Calendar.Year <- format(lunar_df$Calendar.Date, "%Y")
+solar_df$Calendar.Year <- format(solar_df$Calendar.Date, "%Y")
+```
+```{r}
+# Get only the first character of Eclipse.Type
+lunar_df$Eclipse.Type <- substr(lunar_df$Eclipse.Type, 1, 1)
+solar_df$Eclipse.Type <- substr(solar_df$Eclipse.Type, 1, 1)
+```
+```{r}
+# Save the cleaned dataset
+write.csv(lunar_df, "dataset/lunar_data_full.csv", row.names = FALSE)
+write.csv(solar_df, "dataset/solar_data_full.csv", row.names = FALSE)
+```
+```{r}
+set.seed(2901)
+sample_size_lunar <- floor(0.5 * nrow(lunar_df))
+sample_lunar_df <- lunar_df[sample(1:nrow(lunar_df), sample_size_lunar),]
+sample_size_solar <- floor(0.5 * nrow(solar_df))
+sample_solar_df <- solar_df[sample(1:nrow(solar_df), sample_size_solar),]
+```
+```{r}
+write.csv(lunar_df, "dataset/lunar_data_sample.csv", row.names = FALSE)
+write.csv(solar_df, "dataset/solar_data_sample.csv", row.names = FALSE)
+```
