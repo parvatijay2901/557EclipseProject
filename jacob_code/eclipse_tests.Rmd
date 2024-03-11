@@ -1,0 +1,123 @@
+---
+title: "Eclipse_tests"
+output: pdf_document
+date: "2024-03-02"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+eclipses <- read.csv('eclipse_diff.csv')
+```
+
+
+```{r}
+eclipses$Combined.Datetime <- as.POSIXct(eclipses$Combined.Datetime, format = '%Y-%m-%d %H:%M:%S')
+eclipses$Year <- format(eclipses$Combined.Datetime, '%Y')
+
+eclipses$Time.Difference.R <- NA
+
+# Iterate through the rows to calculate time differences
+for (i in 2:nrow(eclipses)) {
+  time_diff_days <- as.numeric(difftime(eclipses$Combined.Datetime[i], eclipses$Combined.Datetime[i - 1], units = "days"))
+  if (time_diff_days <= 21) {
+    eclipses$Time.Difference.R[i] <- time_diff_days
+  }
+}
+
+before_2024 <- subset(eclipses, Year <= 2024)
+after_2024 <- subset(eclipses, Year > 2024)
+
+```
+
+
+```{r}
+
+average_before_2024 <- mean(before_2024$Time.Difference.R, na.rm=TRUE)
+average_after_2024 <- mean(after_2024$Time.Difference.R, na.rm=TRUE)
+
+t_test_result <- t.test(before_2024$Time.Difference.R, after_2024$Time.Difference.R, var.equal = TRUE)
+print(t_test_result)
+```
+```{r}
+library(ggplot2)
+
+ggplot(eclipses, aes(x = Combined.Datetime, y = Time.Difference.R)) +
+  geom_point() +
+  labs(title = "Time Difference Over Time",
+       x = "Year",
+       y = "Time Difference")
+```
+```{r}
+filtered_data <- eclipses[eclipses$Combined.Datetime >= as.Date("2024-01-01") & 
+                           eclipses$Combined.Datetime <= as.Date("3000-12-31"), ]
+time_dif <- ggplot(filtered_data, aes(x = Combined.Datetime, y = Time.Difference.R)) +
+  geom_point() +
+  labs(title = "Time Difference between Solar/Lunar Eclipses (2024-3000)",
+       x = "Year",
+       y = "Time Difference in Days")
+
+# ggsave("time_difference_plot.png", plot = time_dif, width=7, height=5, units="in")
+
+```
+
+```{r}
+library(dplyr)
+eclipses_w_type <- eclipses
+eclipses_w_type <- eclipses_w_type %>%
+  mutate(Eclipse.Type = if_else(Eclipse.Type %in% c("A-", "A+", "Am", "An", "As"), "A", Eclipse.Type))
+eclipses_w_type <- eclipses_w_type %>%
+  mutate(Eclipse.Type = if_else(Eclipse.Type %in% c("H2", "H3", "Hm"), "H", Eclipse.Type))
+eclipses_w_type <- eclipses_w_type %>%
+  mutate(Eclipse.Type = if_else(Eclipse.Type %in% c("T-", "T+", "Tm", "Tn", "Ts"), "T", Eclipse.Type))
+eclipses_w_type <- eclipses_w_type %>%
+  mutate(Eclipse.Type = if_else(Eclipse.Type %in% c("Pb"), "P", Eclipse.Type))
+eclipses_w_type <- eclipses_w_type %>%
+  mutate(Eclipse.Type = if_else(Eclipse.Type %in% c("Nb", "Nx"), "N", Eclipse.Type))
+
+```
+
+```{r}
+eclipses_w_type <- eclipses_w_type[complete.cases(eclipses_w_type$Time.Difference.R), ]
+eclipses_w_type <- na.omit(eclipses_w_type)
+aov_model_type <- aov(Time.Difference.R ~ Eclipse.Type, data = eclipses_w_type)
+summary(aov_model_type)
+```
+```{r}
+tukey_results <- TukeyHSD(aov_model_type)
+print(tukey_results)
+```
+
+```{r}
+conf_interval_typet <- confint(linear_model_type, "Eclipse.TypeT")
+print(conf_interval_typet)
+
+```
+(0.56hr, 2.33hr)
+
+
+```{r}
+library(dplyr)
+
+# Replace "your_data" and "YourVariable" with your actual data and variable names
+eclipses_w_type %>%
+  group_by(Eclipse.Type) %>%
+  summarize(Average = mean(Time.Difference.R, na.rm = TRUE))
+```
+```{r}
+# Original data
+results_data <- data.frame(
+  Comparison = c("H-A", "N-A", "P-A", "T-A", "N-H", "P-H", "T-H", "P-N", "T-N", "T-P"),
+  Difference = c(0.0109617986, 0.0624710452, 0.0620681640, 0.0602598542, 0.0515092466, 0.0511063654, 0.0492980556, -0.0004028812, -0.0022111910, -0.0018083098),
+  Lower_CI = c(-0.106341232, 0.003139836, 0.010839260, 0.008978001, -0.066721222, -0.063273056, -0.065105090, -0.053721202, -0.055580388, -0.045995179),
+  Upper_CI = c(0.12826483, 0.12180225, 0.11329707, 0.11154171, 0.16973972, 0.16548579, 0.16370120, 0.05291544, 0.05115801, 0.04237856),
+  Adjusted_p_value = c(0.9990709, 0.0332288, 0.0084481, 0.0117975, 0.7579533, 0.7402749, 0.7653484, 1.0000000, 0.9999632, 0.9999650)
+)
+
+# Display the table
+print(results_data)
+
+```
+
